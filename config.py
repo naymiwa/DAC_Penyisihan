@@ -1,0 +1,8 @@
+# config.py
+SEED = 42
+MAX_FEATURES = 1500
+NGRAM_RANGE = (1, 2)
+VECTOR_SIZE = 100
+WINDOW_SIZE = 5
+N_FOLDS = 5
+DATA_DIR = "data"
