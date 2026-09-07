@@ -4,7 +4,84 @@ import scipy.sparse as sp
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from gensim.models import Word2Vec
+
+
+class SimpleWord2Vec:
+    """Word2Vec Skip-gram with Negative Sampling, implemented from scratch with numpy."""
+
+    def __init__(self, vector_size=100, window=5, min_count=2, seed=42):
+        self.vector_size = vector_size
+        self.window = window
+        self.min_count = min_count
+        self.rng = np.random.RandomState(seed)
+        self.word2idx = {}
+        self.idx2word = {}
+        self.W_in = None
+        self.W_out = None
+
+    def _build_vocab(self, sentences):
+        word_freq = {}
+        for sent in sentences:
+            for w in sent:
+                word_freq[w] = word_freq.get(w, 0) + 1
+        idx = 0
+        for w, c in word_freq.items():
+            if c >= self.min_count:
+                self.word2idx[w] = idx
+                self.idx2word[idx] = w
+                idx += 1
+        self.vocab_size = len(self.word2idx)
+
+    def _sigmoid(self, x):
+        return 1.0 / (1.0 + np.exp(-np.clip(x, -8, 8)))
+
+    def fit(self, sentences, epochs=5, neg_samples=5, lr_start=0.025, lr_min=0.0001):
+        self._build_vocab(sentences)
+        if self.vocab_size == 0:
+            return self
+        vs = self.vector_size
+        self.W_in = (self.rng.rand(self.vocab_size, vs) - 0.5) / vs
+        self.W_out = np.zeros((self.vocab_size, vs))
+        total_words = sum(len(s) for s in sentences)
+        for epoch in range(epochs):
+            word_count = 0
+            for sent in sentences:
+                sent_indices = [self.word2idx[w] for w in sent if w in self.word2idx]
+                for i, center_idx in enumerate(sent_indices):
+                    word_count += 1
+                    progress = word_count / (total_words * epochs)
+                    lr = max(lr_min, lr_start * (1.0 - progress))
+                    context_start = max(0, i - self.window)
+                    context_end = min(len(sent_indices), i + self.window + 1)
+                    for j in range(context_start, context_end):
+                        if j == i:
+                            continue
+                        context_idx = sent_indices[j]
+                        # Positive sample
+                        dot = np.dot(self.W_in[center_idx], self.W_out[context_idx])
+                        g = lr * (1.0 - self._sigmoid(dot))
+                        self.W_out[context_idx] += g * self.W_in[center_idx]
+                        self.W_in[center_idx] += g * self.W_out[context_idx]
+                        # Negative samples
+                        for _ in range(neg_samples):
+                            neg_idx = self.rng.randint(0, self.vocab_size)
+                            dot = np.dot(self.W_in[center_idx], self.W_out[neg_idx])
+                            g = lr * (0.0 - self._sigmoid(dot))
+                            self.W_out[neg_idx] += g * self.W_in[center_idx]
+                            self.W_in[center_idx] += g * self.W_out[neg_idx]
+            print(f"    Word2Vec epoch {epoch+1}/{epochs} selesai")
+        return self
+
+    def __contains__(self, word):
+        return word in self.word2idx
+
+    def __getitem__(self, word):
+        return self.W_in[self.word2idx[word]]
+
+    def get(self, word, default=None):
+        if word in self.word2idx:
+            return self.W_in[self.word2idx[word]]
+        return default
 
 
 def extract_features(
@@ -117,25 +194,24 @@ def extract_features(
     # ==========================================
     # 3. TF-IDF WEIGHTED WORD2VEC
     # ==========================================
-    print("Melatih model Word2Vec & menerapkan Weighted Pooling...")
+    print("Melatih model Word2Vec (from scratch) & menerapkan Weighted Pooling...")
     sentences = [str(text).split() for text in all_text]
 
-    w2v_model = Word2Vec(
-        sentences,
+    w2v_model = SimpleWord2Vec(
         vector_size=vector_size,
         window=window_size,
         min_count=2,
-        workers=4,
         seed=seed
     )
+    w2v_model.fit(sentences, epochs=5, neg_samples=5)
 
     def get_weighted_w2v_vector(text):
         words = str(text).split()
         vectors = []
         weights = []
         for word in words:
-            if word in w2v_model.wv:
-                vectors.append(w2v_model.wv[word])
+            if word in w2v_model:
+                vectors.append(w2v_model[word])
                 weights.append(idf_dict.get(word, 1.0))
         if not vectors:
             return np.zeros(vector_size)
