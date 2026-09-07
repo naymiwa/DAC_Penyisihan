@@ -100,7 +100,7 @@ def apply_stem_dict(text, stem_dict):
 # 5. MAIN PREPROCESSING FUNCTION
 # ==========================================
 
-def preprocess_data(train, test):
+def preprocess_data(train, test, max_content_words=512):
 
     print("\n=== NLP PREPROCESSING ===")
 
@@ -116,7 +116,7 @@ def preprocess_data(train, test):
     )
 
     train["temp_content"] = train["content"].apply(
-        lambda x: fast_clean(x, max_words=256)
+        lambda x: fast_clean(x, max_words=max_content_words)
     )
 
     test["temp_title"] = test["title"].apply(
@@ -124,7 +124,7 @@ def preprocess_data(train, test):
     )
 
     test["temp_content"] = test["content"].apply(
-        lambda x: fast_clean(x, max_words=256)
+        lambda x: fast_clean(x, max_words=max_content_words)
     )
 
 
