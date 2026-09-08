@@ -8,7 +8,6 @@ import re
 
 import numpy as np
 from collections import Counter
-from joblib import Parallel, delayed
 
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import (
     StopWordRemoverFactory
@@ -20,12 +19,14 @@ from Sastrawi.Stemmer.StemmerFactory import (
 
 
 # ==========================================
-# 1. INISIALISASI SASTRAWI
+# 1. INISIALISASI SASTRAWI (sekali saja)
 # ==========================================
 
 stopwords_set = set(
     StopWordRemoverFactory().get_stop_words()
 )
+
+_stemmer = StemmerFactory().create_stemmer()
 
 
 # ==========================================
@@ -67,20 +68,18 @@ def fast_clean(text, max_words=None):
 
 
 # ==========================================
-# 3. STEMMING PER CHUNK
+# 3. STEMMING DENGAN CACHE
 # ==========================================
 
-def stem_chunk(words_chunk):
-
-    local_stemmer = (
-        StemmerFactory()
-        .create_stemmer()
-    )
-
-    return {
-        word: local_stemmer.stem(word)
-        for word in words_chunk
-    }
+def stem_with_cache(words, stemmer):
+    cache = {}
+    total = len(words)
+    for i, word in enumerate(words):
+        if word not in cache:
+            cache[word] = stemmer.stem(word)
+        if (i + 1) % 1000 == 0:
+            print(f"   Stemming: {i+1}/{total} kata...")
+    return cache
 
 
 # ==========================================
@@ -182,34 +181,19 @@ def preprocess_data(train, test, max_content_words=512):
 
 
     # ------------------------------------------
-    # PARALLEL STEMMING
+    # STEMMING (single thread + cache)
     # ------------------------------------------
 
-    n_jobs = os.cpu_count() or 1
+    print("4. Menjalankan Sastrawi stemming (single thread + cache)...")
 
-    print(
-        f"4. Menjalankan Sastrawi "
-        f"dengan {n_jobs} proses..."
-    )
+    stem_dict = stem_with_cache(words_to_stem, _stemmer)
 
-    chunks = np.array_split(
-        words_to_stem,
-        n_jobs * 4
-    )
-
-    results = Parallel(
-        n_jobs=n_jobs,
-        backend="loky",
-        verbose=5
-    )(
-        delayed(stem_chunk)(chunk.tolist())
-        for chunk in chunks
-        if len(chunk) > 0
-    )
-
-
-    for result in results:
-        stem_dict.update(result)
+    # Tambahkan kata langka
+    for word, freq in word_counter.items():
+        if word in stopwords_set:
+            continue
+        if freq < MIN_FREQ:
+            stem_dict[word] = word
 
 
     # ------------------------------------------
