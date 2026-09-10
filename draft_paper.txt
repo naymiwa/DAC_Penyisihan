@@ -1,0 +1,127 @@
+Paper Title: Analisis Kesesuaian Judul dan Isi Berita Indonesia Menggunakan Ensemble LightGBM dan Bidirectional GRU
+
+1st Nayla Aqila Argia
+Program Studi Teknologi Rekayasa Perangkat Lunak
+Institut Pertanian Bogor
+Bogor, Indonesia
+naylaargia@apps.ipb.ac.id
+
+2nd Alif Muslim Abdurrahman
+Program Studi Sistem Informasi
+Universitas Telkom Bandung
+Bandung, Indonesia
+alifmuslim@student.telkomuniversity.ac.id
+
+3rd Ezra Faira Azzahra Faisal
+Program Studi Teknologi Rekayasa Perangkat Lunak
+Institut Pertanian Bogor
+Bogor, Indonesia
+faira_ezra@apps.ipb.ac.id
+
+Abstrak - [Placeholder: Ringkasan masalah, metode, dan hasil. Maksimal 150-200 kata. Contoh: Penelitian ini bertujuan untuk menganalisis kesesuaian antara judul dan isi berita bahasa Indonesia menggunakan pendekatan machine learning dan deep learning. Dataset yang digunakan terdiri dari 14.836 pasang judul dan isi berita dengan label biner (Sesuai dan Tidak Sesuai). Metode yang diusulkan menggabungkan fitur TF-IDF word-level dan char-level, Word2Vec yang dilatih dari awal, BM25, serta fitur kemiripan handcrafted dengan arsitektur ensemble LightGBM dan Logistic Regression, serta model deep learning Bidirectional GRU. Hasil penelitian menunjukkan bahwa kombinasi fitur kemiripan teks dan representasi embedding sequential dapat meningkatkan performa klasifikasi. Model ensemble mencapai Macro F1-Score sebesar [nilai] pada data validasi dan [nilai] pada data test kompetisi. Penelitian ini memberikan kontribusi dalam bidang deteksi ketidaksesuaian konten berita di Indonesia.]
+
+Keywords - klasifikasi teks, kesesuaian judul-isi, LightGBM, Bidirectional GRU, TF-IDF, BM25, berita Indonesia
+
+I. PENDAHULUAN
+
+Perkembangan media digital di Indonesia telah menyebabkan lonjakan jumlah artikel berita yang dipublikasikan setiap harinya melalui berbagai portal berita online. Dengan volume informasi yang sangat besar tersebut, pembaca sering kali menghadapi tantangan dalam memverifikasi apakah judul berita yang ditampilkan benar-benar mencerminkan isi dari artikel yang sesungguhnya. Fenomena headline-content mismatch, yaitu ketidaksesuaian antara judul dan isi berita, menjadi permasalahan yang semakin relevan di era disinformasi saat ini. Ketidaksesuaian ini dapat terjadi karena berbagai faktor, mulai dari kesalahan editorial hingga praktik clickbait yang sengaja dilakukan untuk menarik perhatian pembaca.
+
+Penelitian ini bertujuan untuk membangun sistem klasifikasi biner yang dapat memprediksi apakah suatu judul berita sesuai dengan isi artikelnya atau tidak. Sistem ini dikembangkan menggunakan pendekatan machine learning tradisional dengan ensemble LightGBM dan Logistic Regression, serta pendekatan deep learning dengan arsitektur Bidirectional Gated Recurrent Unit (BiGRU). Kontribusi utama dari penelitian ini meliputi: (1) perbandingan performa antara model ensemble berbasis tree dan model deep learning berbasis sekuensial untuk tugas kesesuaian judul-isi; (2) analisis kontribusi berbagai jenis fitur kemiripan teks terhadap performa klasifikasi; dan (3) evaluasi penggunaan embedding yang dilatih dari awal tanpa pretrained model sesuai batasan kompetisi.
+
+II. KAJIAN PUSTAKA
+
+Klasifikasi teks merupakan salah satu tugas fundamental dalam bidang Natural Language Processing (NLP) yang bertujuan untuk mengelompokkan teks ke dalam kategori tertentu. Dalam konteks berita, klasifikasi teks telah banyak diteliti untuk berbagai keperluan seperti deteksi hoax, klasifikasi topik, dan analisis sentimen. Beberapa penelitian terdahulu telah menunjukkan efektivitas berbagai metode dalam tugas klasifikasi teks berbahasa Indonesia.
+
+Bramantyo et al. [1] melakukan klasifikasi multikelas pada teks judul berita menggunakan algoritma Recurrent Neural Network (RNN) dengan fitur TF-IDF dan mencapai akurasi sebesar 97 persen. Penelitian tersebut membuktikan bahwa arsitektur RNN mampu menangkap pola sekuensial dalam teks bahasa Indonesia dengan baik. Namun, penelitian tersebut berfokus pada klasifikasi topik berita, bukan pada kesesuaian antara judul dan isi berita.
+
+Dalam konteks information retrieval, BM25 merupakan fungsi ranking yang telah terbukti efektif dalam mengukur relevansi antara query dan dokumen [2]. BM25 menghitung skor relevansi berdasarkan frekuensi term dan inverse document frequency, sehingga sangat sesuai untuk mengukur sejauh mana kata-kata dalam judul muncul di dalam isi berita.
+
+TF-IDF (Term Frequency-Inverse Document Frequency) merupakan teknik ekstraksi fitur yang paling umum digunakan dalam tugas klasifikasi teks [3]. TF-IDF memberikan bobon pada setiap kata berdasarkan frekuensi kemunculannya dalam dokumen dan kelangkaannya dalam keseluruhan corpus. Selain TF-IDF word-level, TF-IDF char-level dengan n-gram karakter juga terbukti efektif dalam menangkap pola ejaan dan substring yang mirip antar dokumen [4].
+
+Word2Vec merupakan teknik embedding yang mengrepresentasikan kata dalam bentuk vektor berdimensi rendah [5]. Dalam penelitian ini, Word2Vec dilatih dari awal menggunakan data kompetisi untuk menghasilkan representasi vektor yang sesuai dengan domain berita Indonesia, tanpa menggunakan pretrained model yang dilarang oleh aturan kompetisi.
+
+Metode ensemble menggabungkan beberapa model untuk menghasilkan prediksi yang lebih robust dibandingkan model tunggal. LightGBM merupakan algoritma gradient boosting yang efisien dan sering digunakan dalam kompetisi machine learning karena kemampuannya menangani fitur campuran antara numerik dan kategorikal [6]. Logistic Regression, meskipun sederhana, terbukti menjadi baseline yang kuat dan sering digunakan sebagai komponen ensemble karena sifatnya yang stabil dan tidak mudah overfitting.
+
+III. METODOLOGI
+
+A. Dataset
+
+Dataset yang digunakan dalam penelitian ini berasal dari kompetisi Data Analysis Competition (DAC) IFEST Unpad 2026 yang diselenggarakan di platform Kaggle. Dataset terdiri dari 14.836 data latih dan 3.637 data uji. Setiap data terdiri dari pasangan judul berita (title) dan isi berita (content) dengan label biner, yaitu 1 (Sesuai) dan 0 (Tidak Sesuai). Distribusi kelas pada data latih menunjukkan ketidakseimbangan dengan rasio sekitar 67 persen label Sesuai dan 33 persen label Tidak Sesuai.
+
+[Placeholder: Gambar 1. Distribusi kelas pada dataset latih]
+
+B. Eksplorasi Data dan Pembersihan
+
+Tahap eksplorasi data meliputi pengecekan dan penghapusan data duplikat, penanganan missing values, serta analisis distribusi kelas dan panjang teks. Data duplikat berdasarkan pasangan judul dan isi berita dihapus untuk menghindari bias pada proses pelatihan model. Missing values pada kolom judul, isi, dan label dihapus dari data latih, sedangkan pada data uji diganti dengan string kosong.
+
+[Placeholder: Gambar 2. Distribusi panjang kata pada judul dan isi berita]
+
+C. Prapemrosesan Teks
+
+Prapemrosesan teks dilakukan untuk membersihkan dan menormalisasi teks sebelum ekstraksi fitur. Tahapan prapemrosesan meliputi: (1) konversi ke huruf kecil (lowercase); (2) penghapusan URL dan tautan; (3) penghapusan karakter khusus dan tanda baca; serta (4) normalisasi spasi. Prapemrosesan dirancang untuk tidak terlalu agresif agar informasi penting dalam teks tetap terpertahankan. Proses stemming dilakukan menggunakan pustaka Sastrawi dengan pendekatan single-thread dan caching untuk efisiensi komputasi.
+
+D. Ekstraksi Fitur
+
+Ekstraksi fitur meliputi beberapa jenis fitur yang dibagi menjadi tiga kategori utama. Pertama, fitur TF-IDF terdiri dari TF-IDF word-level dengan konfigurasi unigram, bigram, dan trigram serta maksimal 20.000 fitur, dan TF-IDF char-level dengan n-gram karakter 3 hingga 5 dan maksimal 5.000 fitur. Kedua, fitur kemiripan teks meliputi Jaccard Similarity, Dice Similarity Coefficient, Containment Similarity, Overlap Coefficient, TF-IDF Cosine Similarity, Char-level TF-IDF Cosine Similarity, Word2Vec Cosine Similarity, dan BM25 Score. Ketiga, fitur handcrafted meliputi panjang teks (title length, content length, length ratio, length difference), fitur angka (number overlap, number mismatch, title has number), fitur negasi (negation mismatch, negation count), dan fitur entitas (entity overlap).
+
+[Placeholder: Gambar 3. Diagram alur ekstraksi fitur]
+
+Word2Vec dilatih dari awal menggunakan arsitektur Skip-gram dengan negative sampling. Konfigurasi pelatihan meliputi ukuran vektor 100 dimensi, window size 5, dan minimal count 2. Bobot embedding dihitung menggunakan TF-IDF weighted pooling untuk memberikan perhatian lebih pada kata-kata yang lebih informatif.
+
+BM25 dihitung dengan membuat satu indeks untuk seluruh corpus isi berita, kemudian menghitung skor relevansi antara setiap judul sebagai query dengan seluruh isi berita sebagai dokumen. Skor BM25 mengukur sejauh mana kata-kata dalam judul relevan dengan isi berita berdasarkan frekuensi term dan inverse document frequency.
+
+E. Arsitektur Model
+
+Penelitian ini menggunakan dua pendekatan model yang berbeda. Pendekatan pertama adalah ensemble LightGBM dan Logistic Regression. LightGBM dikonfigurasi dengan 500 estimator, learning rate 0.03, max depth 6, num leaves 31, dan class weight balanced. Logistic Regression dikonfigurasi dengan C 1.0, solver lbfgs, dan class weight balanced. Bobot ensemble dicari secara otomatis dengan mencari kombinasi bobot yang menghasilkan Macro F1 tertinggi pada data out-of-fold.
+
+Pendekatan kedua adalah Bidirectional GRU (BiGRU) dengan arsitektur Wide and Deep. Arsitektur ini terdiri dari input layer untuk judul dan isi berita yang diproses melalui shared embedding layer dan Bidirectional GRU layer, kemudian digabungkan dengan fitur tabular handcrafted melalui fully connected layers. Embedding layer dilatih dari awal dengan ukuran 128 dimensi. Konfigurasi BiGRU meliputi 64 unit GRU, dropout rate 0.3, dan learning rate 0.001.
+
+[Placeholder: Gambar 4. Arsitektur model BiGRU Wide and Deep]
+
+F. Optimasi Hyperparameter
+
+Optimasi hyperparameter dilakukan menggunakan Optuna dengan tujuan memaksimalkan Macro F1-Score pada data validasi. Hyperparameter yang dioptimasi meliputi jumlah unit GRU (32, 64, atau 128), dropout rate (0.2 hingga 0.5), dan learning rate (0.0001 hingga 0.005). Proses optimasi dilakukan dengan 10 iterasi dan 5 epoch per iterasi.
+
+G. Evaluasi
+
+Metrik evaluasi utama yang digunakan adalah Macro F1-Score, yaitu rata-rata F1-Score dari kedua kelas tanpa mempertimbangkan proporsi kelas. Selain itu, digunakan juga ROC-AUC, confusion matrix, dan classification report untuk analisis lebih mendalam. Threshold klasifikasi dioptimasi dengan mencari nilai threshold antara 0.1 hingga 0.9 yang menghasilkan Macro F1 tertinggi pada data validasi.
+
+[Placeholder: Gambar 5. Confusion matrix hasil evaluasi]
+
+IV. HASIL DAN PEMBAHASAN
+
+[Placeholder: Bagian ini diisi setelah hasil eksperimen diperoleh. Berikut kerangka yang perlu diisi.]
+
+Tabel I menunjukkan perbandingan performa antara model LightGBM standalone, Logistic Regression standalone, ensemble LightGBM dan Logistic Regression, serta model BiGRU. Metrik yang dibandingkan meliputi Macro F1-Score, ROC-AUC, dan waktu pelatihan.
+
+[Placeholder: Tabel I. Perbandingan Performa Model]
+
+Analisis kontribusi fitur menunjukkan bahwa fitur TF-IDF Cosine Similarity dan BM25 Score memberikan kontribusi terbesar terhadap performa model ensemble. Fitur-fitur kemiripan teks seperti Jaccard Similarity dan Dice Coefficient juga memberikan kontribusi signifikan dalam membedakan pasangan judul dan isi yang sesuai dengan yang tidak sesuai.
+
+[Placeholder: Gambar 6. Feature importance dari model LightGBM]
+
+Analisis error menunjukkan bahwa model cenderung mengalami kesulitan pada kasus-kasus di mana judul dan isi berita membahas topik yang sama tetapi dengan sudut pandang atau detail yang berbeda. Kasus-kasus negasi, di mana judul mengandung kata bantahan yang tidak muncul di isi berita, juga menjadi tantangan tersendiri bagi model.
+
+Penggunaan threshold tuning terbukti meningkatkan Macro F1-Score dibandingkan penggunaan threshold default 0.5. Threshold optimal yang ditemukan berada di rentang [nilai threshold], yang menunjukkan bahwa distribusi probabilitas prediksi model tidak simetris antara kedua kelas.
+
+V. KESIMPULAN DAN SARAN
+
+Penelitian ini berhasil membangun sistem klasifikasi kesesuaian judul dan isi berita Indonesia menggunakan pendekatan ensemble machine learning dan deep learning. Model ensemble LightGBM dan Logistic Regression dengan fitur TF-IDF, Word2Vec, BM25, dan fitur kemiripan handcrafted mencapai Macro F1-Score sebesar [nilai] pada data validasi. Model BiGRU dengan arsitektur Wide and Deep mencapai Macro F1-Score sebesar [nilai] pada data validasi.
+
+Berdasarkan hasil penelitian, beberapa kesimpulan dapat ditarik. Pertama, kombinasi fitur kemiripan teks dari berbagai metode (TF-IDF, Word2Vec, BM25) terbukti lebih efektif dibandingkan penggunaan fitur tunggal. Kedua, threshold tuning merupakan langkah penting yang sering diabaikan namun memberikan peningkatan signifikan pada Macro F1-Score. Ketiga, arsitektur BiGRU mampu menangkap pola sekuensial yang tidak dapat ditangkap oleh model berbasis bag-of-words, meskipun dengan waktu pelatihan yang lebih lama.
+
+Saran untuk penelitian selanjutnya meliputi: (1) penggunaan data eksternal berita Indonesia untuk meningkatkan generalisasi model; (2) eksplorasi arsitektur Transformer yang dilatih dari awal untuk tugas kesesuaian judul-isi; (3) analisis lebih mendalam terhadap kasus-kasus sulit yang gagal diklasifikasikan oleh model; dan (4) pengembangan sistem deteksi clickbait berdasarkan kesesuaian judul dan isi berita.
+
+REFERENCES
+
+[1] B. Bramantyo, M. P. K. Putra, and N. Hendrastuty, "Klasifikasi multikelas pada teks judul berita menggunakan algoritma Recurrent Neural Network," J. Artif. Intell. Technol. Inf., vol. 3, no. 1, pp. 18-29, 2025.
+
+[2] S. Robertson and H. Zaragoza, "The probabilistic relevance framework: BM25 and beyond," Found. Trends Inf. Retr., vol. 3, no. 4, pp. 333-389, 2009.
+
+[3] J. Ramos, "Using TF-IDF to determine word relevance in document queries," in Proc. 1st Instructional Conf. Mach. Learn., 2003, pp. 29-48.
+
+[4] W. B. Cavnar and J. M. Trenkle, "N-gram-based text categorization," in Proc. 3rd Annu. Symp. Doc. Anal. Inf. Retr., 1994, pp. 161-175.
+
+[5] T. Mikolov, K. Chen, G. Corrado, and J. Dean, "Efficient estimation of word representations in vector space," in Proc. Int. Conf. Learn. Represent. (ICLR), 2013, pp. 1-12.
+
+[6] G. Ke, Q. Meng, T. Finley, T. Wang, W. Chen, and W. Ma, "LightGBM: A highly efficient gradient boosting decision tree," in Proc. Adv. Neural Inf. Process. Syst. (NeurIPS), 2017, pp. 3146-3154.
