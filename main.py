@@ -20,21 +20,7 @@ from evaluation import evaluate_oof
 
 
 # ==========================================
-# 1. GLOBAL CONFIGURATION
-# ==========================================
-
-SEED = 42
-MAX_FEATURES = 20000
-NGRAM_RANGE = (1, 3)
-VECTOR_SIZE = 100
-WINDOW_SIZE = 5
-FAST_MODE = True
-N_FOLDS = 5
-MAX_CONTENT_WORDS = 512
-
-
-# ==========================================
-# 2. SET RANDOM SEED
+# 1. SET RANDOM SEED
 # ==========================================
 
 def seed_everything(seed):
@@ -52,7 +38,7 @@ print("=" * 50)
 
 
 # ==========================================
-# 3. LOAD DATASET
+# 2. LOAD DATASET
 # ==========================================
 
 DATA_DIR = "data"
@@ -76,14 +62,14 @@ print(f"Sample Submission  : {sample_sub.shape}")
 
 
 # ==========================================
-# 4. EDA & DATA CLEANING
+# 3. EDA & DATA CLEANING
 # ==========================================
 
 train, test = clean_and_analyze(train, test)
 
 
 # ==========================================
-# 5. NLP PREPROCESSING
+# 4. NLP PREPROCESSING
 # ==========================================
 
 train, test, stem_dict = preprocess_data(
@@ -92,7 +78,7 @@ train, test, stem_dict = preprocess_data(
 
 
 # ==========================================
-# 6. FEATURE EXTRACTION
+# 5. FEATURE EXTRACTION
 # ==========================================
 
 train, test, X_train, X_test, tfidf, w2v_model = extract_features(
@@ -109,7 +95,7 @@ y_train = train["label"].values
 
 
 # ==========================================
-# 7. MODELLING
+# 6. MODELLING
 # ==========================================
 
 oof_preds_probs, test_preds_probs = train_model(
@@ -122,7 +108,7 @@ oof_preds_probs, test_preds_probs = train_model(
 
 
 # ==========================================
-# 8. POST-PROCESSING RULE-BASED
+# 7. POST-PROCESSING RULE-BASED
 # ==========================================
 
 print("\n=== MENERAPKAN RULE-BASED POST-PROCESSING ===")
@@ -155,14 +141,14 @@ test_preds_probs = np.clip(test_preds_probs, 0.0, 1.0)
 
 
 # ==========================================
-# 9. EVALUATION & THRESHOLD TUNING
+# 8. EVALUATION & THRESHOLD TUNING
 # ==========================================
 
 best_th, best_f1, auc = evaluate_oof(y_train, oof_preds_probs)
 
 
 # ==========================================
-# 10. ERROR ANALYSIS
+# 9. ERROR ANALYSIS
 # ==========================================
 
 print("\n=== ERROR ANALYSIS ===")
@@ -184,7 +170,7 @@ if len(false_negatives) > 0:
 
 
 # ==========================================
-# 11. GENERATE SUBMISSION
+# 10. GENERATE SUBMISSION
 # ==========================================
 
 test_labels = (test_preds_probs >= best_th).astype(int)
